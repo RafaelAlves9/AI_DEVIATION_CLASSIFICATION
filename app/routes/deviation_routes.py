@@ -24,9 +24,18 @@ classification_service = DeviationClassificationService()
 def health_check():
     """
     Endpoint de health check
-    
-    Returns:
-        JSON com status da aplicação e serviços
+
+    ---
+    tags:
+      - Health
+    summary: Verifica saúde da aplicação
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Status da aplicação e serviços
+      503:
+        description: Serviço degradado ou indisponível
     """
     try:
         services_status = classification_service.health_check()
@@ -51,14 +60,54 @@ def health_check():
 def classify_deviation():
     """
     Endpoint para classificação de desvios
-    
-    Request Body (JSON ou multipart/form-data):
-        - local (string, obrigatório): Local do desvio
-        - description (string, opcional): Descrição textual do desvio
-        - audio (string base64 ou file, opcional): Áudio em MP3
-        
-    Returns:
-        JSON com classificação do desvio
+
+    ---
+    tags:
+      - Deviation
+    summary: Classifica um desvio a partir de texto e/ou áudio
+    consumes:
+      - application/json
+      - multipart/form-data
+    parameters:
+      - in: body
+        name: body
+        required: false
+        schema:
+          type: object
+          properties:
+            local:
+              type: string
+              description: Local do desvio
+            description:
+              type: string
+              description: Descrição textual do desvio
+            audio:
+              type: string
+              description: Áudio em base64
+      - in: formData
+        name: local
+        type: string
+        required: false
+        description: Local do desvio
+      - in: formData
+        name: description
+        type: string
+        required: false
+        description: Descrição textual do desvio
+      - in: formData
+        name: audio
+        type: file
+        required: false
+        description: Arquivo MP3 com áudio do desvio
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Classificação realizada com sucesso
+      400:
+        description: Erro de entrada inválida
+      500:
+        description: Erro interno do servidor
     """
     try:
         # Processa requisição (suporta JSON e multipart)

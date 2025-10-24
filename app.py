@@ -9,6 +9,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from app.routes.deviation_routes import register_routes
 from app.utils.logger import setup_logger
+from app.settings.swagger import swagger
 
 
 # Carrega variáveis de ambiente
@@ -35,6 +36,10 @@ def create_app() -> Flask:
     # Configura CORS (permite qualquer origem)
     CORS(app, resources={r"/*": {"origins": "*"}})
     logger.info("CORS configurado para permitir qualquer origem")
+
+    # Swagger UI
+    swagger.init_app(app)
+    logger.info("Swagger UI configurado em /docs (spec em /swagger.json)")
     
     # Registra rotas
     register_routes(app)
