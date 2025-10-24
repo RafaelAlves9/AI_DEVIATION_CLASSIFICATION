@@ -6,6 +6,37 @@ import pickle
 import random
 from typing import Dict, List
 
+# Importa os enums para usar os valores diretamente
+from app.models.enums import (
+    GravityLevel, UrgencyLevel, TrendLevel,
+    DeviationType, DeviationDirectioning, DeviationCategory
+)
+
+def _map_score_to_gravity(score: float) -> int:
+    if score >= 0.8: return GravityLevel.ExtremeGravity.value
+    if score >= 0.6: return GravityLevel.HighGravity.value
+    if score >= 0.4: return GravityLevel.MediumGravity.value
+    if score >= 0.2: return GravityLevel.LowGravity.value
+    if score > 0.0: return GravityLevel.NoGravity.value
+    return GravityLevel.NotDefined.value
+
+def _map_score_to_urgency(score: float) -> int:
+    if score >= 0.8: return UrgencyLevel.NeedsImmediateAction.value
+    if score >= 0.6: return UrgencyLevel.Urgent.value
+    if score >= 0.4: return UrgencyLevel.AsSoonAsPossible.value
+    if score >= 0.2: return UrgencyLevel.NotVeryUrgent.value
+    if score > 0.0: return UrgencyLevel.CanWait.value
+    return UrgencyLevel.NotDefined.value
+
+def _map_score_to_trend(score: float) -> int:
+    if score >= 0.8: return TrendLevel.WillGetWorseQuickly.value
+    if score >= 0.6: return TrendLevel.WillGetWorseInTheShortTerm.value
+    if score >= 0.4: return TrendLevel.WillGetWorse.value
+    if score >= 0.2: return TrendLevel.WillGetWorseInTheLongTerm.value
+    if score > 0.0: return TrendLevel.NoTrend.value
+    return TrendLevel.NotDefined.value
+
+
 class MockDeviationClassifier:
     """
     Modelo mock que simula classificação de desvios
@@ -15,13 +46,13 @@ class MockDeviationClassifier:
     def __init__(self):
         self.model_version = "1.0.0-mock"
         self.keywords = {
-            'seguranca': ['perigo', 'risco', 'acidente', 'lesão', 'ferimento', 'queda', 'epi'],
-            'qualidade': ['defeito', 'falha', 'problema', 'erro', 'incorreto', 'fora do padrão'],
-            'ambiental': ['vazamento', 'poluição', 'resíduo', 'contaminação', 'meio ambiente'],
-            'operacional': ['parada', 'atraso', 'processo', 'procedimento', 'operação'],
-            'manutencao': ['quebrado', 'danificado', 'manutenção', 'reparo', 'conserto'],
-            'equipamento': ['máquina', 'equipamento', 'ferramenta', 'dispositivo'],
-            'comportamental': ['conduta', 'comportamento', 'atitude', 'negligência'],
+            # Mapeia para categorias para simular uma lógica
+            'EpiOrEpc': ['perigo', 'risco', 'acidente', 'lesão', 'ferimento', 'queda', 'epi'],
+            'Quality': ['defeito', 'falha', 'problema', 'erro', 'incorreto', 'fora do padrão'],
+            'Environment': ['vazamento', 'poluição', 'resíduo', 'contaminação', 'meio ambiente'],
+            'Equipment': ['máquina', 'equipamento', 'ferramenta', 'dispositivo', 'quebrado', 'danificado'],
+            'WorkRulesProceduresAndInstructions': ['processo', 'procedimento', 'operação', 'regra'],
+            'Behavior': ['conduta', 'comportamento', 'atitude', 'negligência', 'imprudência']
         }
     
     def predict(self, text: str, location: str) -> Dict:
@@ -37,69 +68,54 @@ class MockDeviationClassifier:
         """
         text_lower = text.lower()
         
-        # Identifica tipo baseado em keywords
-        tipo = 'operacional'  # default
+        # Identifica categoria baseado em keywords
+        categoria = DeviationCategory.Other.value  # default
         max_matches = 0
-        for tipo_key, keywords in self.keywords.items():
+        for cat_key, keywords in self.keywords.items():
             matches = sum(1 for kw in keywords if kw in text_lower)
             if matches > max_matches:
                 max_matches = matches
-                tipo = tipo_key
+                categoria = DeviationCategory[cat_key].value
         
         # Calcula gravidade baseado em palavras críticas
         critical_words = ['grave', 'crítico', 'urgente', 'emergência', 'perigo', 'risco alto']
-        gravidade = 0.3  # base
+        gravidade_score = 0.3  # base
         for word in critical_words:
             if word in text_lower:
-                gravidade += 0.15
-        gravidade = min(gravidade, 1.0)
+                gravidade_score += 0.15
+        gravidade_score = min(gravidade_score, 1.0)
         
         # Calcula urgência
         urgent_words = ['imediato', 'urgente', 'rápido', 'agora', 'emergência']
-        urgencia = 0.4
+        urgencia_score = 0.4
         for word in urgent_words:
             if word in text_lower:
-                urgencia += 0.15
-        urgencia = min(urgencia, 1.0)
+                urgencia_score += 0.15
+        urgencia_score = min(urgencia_score, 1.0)
         
         # Tendência (probabilidade de recorrência/agravamento)
-        tendencia = random.uniform(0.3, 0.7)
+        tendencia_score = random.uniform(0.3, 0.7)
         
-        # Determina categoria baseado em gravidade
-        if gravidade >= 0.8:
-            categoria = 'critico'
-        elif gravidade >= 0.6:
-            categoria = 'alto'
-        elif gravidade >= 0.4:
-            categoria = 'medio'
-        elif gravidade >= 0.2:
-            categoria = 'baixo'
-        else:
-            categoria = 'observacao'
+        # Determina tipo (simples)
+        tipo = DeviationType.Behavior.value if 'comportamento' in text_lower or 'atitude' in text_lower else DeviationType.Structure.value
         
         # Determina direcionamento
-        direcionamento_map = {
-            'seguranca': 'seguranca_trabalho',
-            'ambiental': 'meio_ambiente',
-            'qualidade': 'qualidade',
-            'manutencao': 'manutencao',
-            'equipamento': 'manutencao',
-            'operacional': 'operacao',
-            'comportamental': 'recursos_humanos',
+        direcionamento_map = {  # Simula um direcionamento básico
+            'EpiOrEpc': DeviationDirectioning.Unit.value,
+            'Environment': DeviationDirectioning.EnvironmentAndQuality.value,
+            'Quality': DeviationDirectioning.EnvironmentAndQuality.value,
+            'Equipment': DeviationDirectioning.Facilities.value,
+            'Behavior': DeviationDirectioning.Factory.value,
         }
         
-        direcionamento = direcionamento_map.get(tipo, 'gestao_instalacao')
-        
-        # Se gravidade crítica, sempre emergência
-        if gravidade >= 0.8 and urgencia >= 0.7:
-            direcionamento = 'emergencia_imediata'
-        elif gravidade >= 0.6 and urgencia >= 0.6:
-            direcionamento = 'supervisao_urgente'
+        # A lógica para encontrar a chave correspondente à categoria precisa ser ajustada
+        categoria_str = DeviationCategory(categoria).name
+        direcionamento = direcionamento_map.get(categoria_str, DeviationDirectioning.Factory.value)
         
         return {
-            'gravidade': round(gravidade, 2),
-            'urgencia': round(urgencia, 2),
-            'tendencia': round(tendencia, 2),
+            'gravidade': _map_score_to_gravity(gravidade_score),
+            'urgencia': _map_score_to_urgency(urgencia_score),
+            'tendencia': _map_score_to_trend(tendencia_score),
             'tipo': tipo,
             'direcionamento': direcionamento,
             'categoria': categoria

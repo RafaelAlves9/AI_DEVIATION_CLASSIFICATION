@@ -9,7 +9,10 @@ import requests
 from app.utils.exceptions import AIValidationError
 from app.utils.logger import setup_logger
 from app.models.schemas import DeviationClassification
-from app.models.enums import DeviationType, DeviationCategory, DeviationDirectioning
+from app.models.enums import (
+    DeviationType, DeviationCategory, DeviationDirectioning,
+    GravityLevel, UrgencyLevel, TrendLevel
+)
 
 
 logger = setup_logger(__name__)
@@ -29,23 +32,28 @@ class AIValidationService:
 Sua função é analisar desvios e incidentes reportados, garantindo que a classificação esteja coerente e precisa.
 
 Você deve validar e, se necessário, corrigir a classificação de desvios baseado em:
-- Gravidade (0.0 a 1.0): Severidade do problema
-- Urgência (0.0 a 1.0): Necessidade de resposta rápida
-- Tendência (0.0 a 1.0): Probabilidade de recorrência ou agravamento
-- Tipo: Categoria do desvio
-- Direcionamento: Área/equipe responsável pelo tratamento
-- Categoria: Nível de criticidade
+- `gravidade`: Severidade do problema (0-5)
+- `urgencia`: Necessidade de resposta rápida (0-5)
+- `tendencia`: Probabilidade de recorrência ou agravamento (0-5)
+- `tipo`: Categoria do desvio (0-2)
+- `direcionamento`: Área/equipe responsável pelo tratamento (0-4)
+- `categoria`: Categoria específica do desvio (0-12)
 
-Tipos válidos: seguranca, qualidade, ambiental, operacional, manutencao, equipamento, procedimento, comportamental, documentacao, infraestrutura
-
-Direcionamentos válidos: emergencia_imediata, supervisao_urgente, manutencao, engenharia, qualidade, seguranca_trabalho, meio_ambiente, recursos_humanos, operacao, gestao_instalacao, documentacao_apenas
-
-Categorias válidas: critico, alto, medio, baixo, observacao
+Valores de 'gravidade' (int): 0=NotDefined, 1=NoGravity, 2=LowGravity, 3=MediumGravity, 4=HighGravity, 5=ExtremeGravity
+Valores de 'urgencia' (int): 0=NotDefined, 1=CanWait, 2=NotVeryUrgent, 3=AsSoonAsPossible, 4=Urgent, 5=NeedsImmediateAction
+Valores de 'tendencia' (int): 0=NotDefined, 1=NoTrend, 2=WillGetWorseInTheLongTerm, 3=WillGetWorse, 4=WillGetWorseInTheShortTerm, 5=WillGetWorseQuickly
+Valores de 'tipo' (int): 0=NotDefined, 1=Behavior, 2=Structure
+Valores de 'direcionamento' (int): 0=NotDefined, 1=Factory, 2=Unit, 3=Facilities, 4=EnvironmentAndQuality
+Valores de 'categoria' (int): 0=NotDefined, 1=EpiOrEpc, 2=Bos, 3=OrderAndCleanlinessFiveS, 4=Equipment, 5=Ergonomics, 6=TrafficOfVehiclesAndPeople, 7=Environment, 8=Quality, 9=WorkRulesProceduresAndInstructions, 10=MobileEquipment, 11=ToolsAndEquipment, 12=Other
 
 Analise a descrição do desvio e a classificação fornecida. Se estiver coerente, retorne a mesma classificação.
 Se houver incoerências, corrija e retorne a versão corrigida.
 
-IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional."""
+IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional, com a estrutura flat (plana):
+{
+    "gravidade": <int>, "urgencia": <int>, "tendencia": <int>,
+    "tipo": <int>, "direcionamento": <int>, "categoria": <int>
+}"""
     
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
         """
@@ -135,18 +143,11 @@ IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional."""
                 return classification
             logger.debug(f"IA resposta={ai_response}")
             
-            # Parse da resposta JSON
+            # Parse da resposta JSON flat
             corrected_data = self._parse_ai_response(ai_response)
             
             # Cria nova classificação com dados corrigidos
-            corrected_classification = DeviationClassification(
-                gravidade=corrected_data['gravidade'],
-                urgencia=corrected_data['urgencia'],
-                tendencia=corrected_data['tendencia'],
-                tipo=corrected_data['tipo'],
-                direcionamento=corrected_data['direcionamento'],
-                categoria=corrected_data['categoria']
-            )
+            corrected_classification = DeviationClassification(**corrected_data)
             
             # Log se houve correção
             if corrected_classification.to_dict() != classification.to_dict():
@@ -182,28 +183,23 @@ IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional."""
         Returns:
             Prompt formatado
         """
-        classification_dict = classification.to_dict()
+        current_classification_json = json.dumps(classification.to_dict(), indent=4)
         
         prompt = f"""Desvio reportado:
 Local: {location}
 Descrição: {text}
 
 Classificação atual:
-- Gravidade: {classification_dict['gravidade']}
-- Urgência: {classification_dict['urgencia']}
-- Tendência: {classification_dict['tendencia']}
-- Tipo: {classification_dict['tipo']}
-- Direcionamento: {classification_dict['direcionamento']}
-- Categoria: {classification_dict['categoria']}
+{current_classification_json}
 
-Valide esta classificação e retorne em formato JSON:
+Valide esta classificação e retorne em formato JSON flat:
 {{
-    "gravidade": <float entre 0.0 e 1.0>,
-    "urgencia": <float entre 0.0 e 1.0>,
-    "tendencia": <float entre 0.0 e 1.0>,
-    "tipo": "<tipo válido>",
-    "direcionamento": "<direcionamento válido>",
-    "categoria": "<categoria válida>"
+    "gravidade": <int>,
+    "urgencia": <int>,
+    "tendencia": <int>,
+    "tipo": <int>,
+    "direcionamento": <int>,
+    "categoria": <int>
 }}"""
         
         return prompt

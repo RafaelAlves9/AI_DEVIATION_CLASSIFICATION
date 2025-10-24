@@ -8,6 +8,7 @@ from typing import Dict
 from app.utils.exceptions import MLModelError
 from app.utils.logger import setup_logger
 from app.models.schemas import DeviationClassification
+from app.models.enums import GravityLevel, UrgencyLevel, TrendLevel
 
 
 logger = setup_logger(__name__)
@@ -95,20 +96,13 @@ class MLModelService:
             logger.info(f"ML classificar: local={location}")
             logger.debug(f"ML texto={text[:100]}...")
             
-            # Usa o modelo para predizer
+            # Usa o modelo para predizer (retorna estrutura flat)
             prediction = self.model.predict(text, location)
             
             logger.info(f"ML ok: {prediction}")
             
-            # Converte predição para objeto DeviationClassification
-            classification = DeviationClassification(
-                gravidade=prediction['gravidade'],
-                urgencia=prediction['urgencia'],
-                tendencia=prediction['tendencia'],
-                tipo=prediction['tipo'],
-                direcionamento=prediction['direcionamento'],
-                categoria=prediction['categoria']
-            )
+            # Cria objeto a partir da predição flat
+            classification = DeviationClassification(**prediction)
             
             return classification
             

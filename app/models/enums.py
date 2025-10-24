@@ -3,42 +3,67 @@
 Enums para classificação de desvios
 Define todos os valores possíveis para tipos, categorias e direcionamentos
 """
-from enum import Enum
+from enum import IntEnum
 
 
-class DeviationType(str, Enum):
-    """Tipos de desvio possíveis"""
-    SEGURANCA = "seguranca"
-    QUALIDADE = "qualidade"
-    AMBIENTAL = "ambiental"
-    OPERACIONAL = "operacional"
-    MANUTENCAO = "manutencao"
-    EQUIPAMENTO = "equipamento"
-    PROCEDIMENTO = "procedimento"
-    COMPORTAMENTAL = "comportamental"
-    DOCUMENTACAO = "documentacao"
-    INFRAESTRUTURA = "infraestrutura"
+class GravityLevel(IntEnum):
+    """Níveis de Gravidade"""
+    NotDefined = 0
+    NoGravity = 1
+    LowGravity = 2
+    MediumGravity = 3
+    HighGravity = 4
+    ExtremeGravity = 5
 
 
-class DeviationCategory(str, Enum):
-    """Categorias de classificação do desvio"""
-    CRITICO = "critico"
-    ALTO = "alto"
-    MEDIO = "medio"
-    BAIXO = "baixo"
-    OBSERVACAO = "observacao"
+class UrgencyLevel(IntEnum):
+    """Níveis de Urgência"""
+    NotDefined = 0
+    CanWait = 1
+    NotVeryUrgent = 2
+    AsSoonAsPossible = 3
+    Urgent = 4
+    NeedsImmediateAction = 5
 
 
-class DeviationDirectioning(str, Enum):
-    """Direcionamentos possíveis para tratamento do desvio"""
-    EMERGENCIA_IMEDIATA = "emergencia_imediata"
-    SUPERVISAO_URGENTE = "supervisao_urgente"
-    MANUTENCAO = "manutencao"
-    ENGENHARIA = "engenharia"
-    QUALIDADE = "qualidade"
-    SEGURANCA_TRABALHO = "seguranca_trabalho"
-    MEIO_AMBIENTE = "meio_ambiente"
-    RECURSOS_HUMANOS = "recursos_humanos"
-    OPERACAO = "operacao"
-    GESTAO_INSTALACAO = "gestao_instalacao"
-    DOCUMENTACAO_APENAS = "documentacao_apenas"
+class TrendLevel(IntEnum):
+    """Níveis de Tendência"""
+    NotDefined = 0
+    NoTrend = 1
+    WillGetWorseInTheLongTerm = 2
+    WillGetWorse = 3
+    WillGetWorseInTheShortTerm = 4
+    WillGetWorseQuickly = 5
+
+
+class DeviationType(IntEnum):
+    """Tipos de desvio"""
+    NotDefined = 0
+    Behavior = 1
+    Structure = 2
+
+
+class DeviationDirectioning(IntEnum):
+    """Direcionamentos para tratamento"""
+    NotDefined = 0
+    Factory = 1
+    Unit = 2
+    Facilities = 3
+    EnvironmentAndQuality = 4
+
+
+class DeviationCategory(IntEnum):
+    """Categorias do desvio"""
+    NotDefined = 0
+    EpiOrEpc = 1
+    Bos = 2
+    OrderAndCleanlinessFiveS = 3
+    Equipment = 4
+    Ergonomics = 5
+    TrafficOfVehiclesAndPeople = 6
+    Environment = 7
+    Quality = 8
+    WorkRulesProceduresAndInstructions = 9
+    MobileEquipment = 10
+    ToolsAndEquipment = 11
+    Other = 12

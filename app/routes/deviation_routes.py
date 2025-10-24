@@ -6,7 +6,13 @@ Define os endpoints da API
 import base64
 from flask import Blueprint, request, jsonify
 from app.services.deviation_classification_service import DeviationClassificationService
-from app.models.schemas import ClassificationRequest
+from app.services.transcription_service import TranscriptionService
+from app.services.ml_model_service import MLModelService
+from app.services.ai_validation_service import AIValidationService
+from app.models.schemas import (
+    ClassificationRequest, DeviationClassification, 
+    DeviationCriticality, DeviationAnalysis
+)
 from app.utils.exceptions import DeviationClassifierError
 from app.utils.logger import setup_logger
 
@@ -16,8 +22,11 @@ logger = setup_logger(__name__)
 # Cria blueprint para as rotas
 deviation_bp = Blueprint('deviation', __name__)
 
-# Inicializa serviço (singleton para performance)
+# Inicializa serviços (singletons para performance)
 classification_service = DeviationClassificationService()
+transcription_service = TranscriptionService()
+ml_service = MLModelService()
+ai_service = AIValidationService()
 
 
 @deviation_bp.route('/health', methods=['GET'])
@@ -151,6 +160,183 @@ def classify_deviation():
         
     except Exception as e:
         # Erros inesperados
+        logger.error(f"Erro inesperado: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'InternalServerError',
+            'message': 'Erro interno do servidor',
+            'details': {'error': str(e)}
+        }), 500
+
+
+@deviation_bp.route('/api/transcribe-audio', methods=['POST'])
+def transcribe_audio():
+    """
+    Transcreve um arquivo de áudio para texto
+
+    ---
+    tags:
+      - Deviation
+    summary: Transcreve áudio usando Faster-Whisper
+    consumes:
+      - multipart/form-data
+    parameters:
+      - in: formData
+        name: audio
+        type: file
+        required: true
+        description: Arquivo MP3/WAV com áudio para transcrição
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Texto transcrito
+      400:
+        description: Entrada inválida
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        if 'audio' not in request.files or not request.files['audio'].filename:
+            return jsonify({
+                'error': 'InvalidInput',
+                'message': "Arquivo 'audio' é obrigatório"
+            }), 400
+
+        audio_file = request.files['audio']
+        audio_bytes = audio_file.read()
+
+        text = transcription_service.transcribe(audio_bytes)
+        return jsonify({'text': text}), 200
+    except DeviationClassifierError as e:
+        logger.warning(f"Erro de aplicação: {e.message}")
+        return jsonify(e.to_dict()), 400
+    except Exception as e:
+        logger.error(f"Erro inesperado: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'InternalServerError',
+            'message': 'Erro interno do servidor',
+            'details': {'error': str(e)}
+        }), 500
+
+
+@deviation_bp.route('/api/ml-classify', methods=['POST'])
+def ml_classify():
+    """
+    Classifica um desvio apenas com o modelo ML
+
+    ---
+    tags:
+      - Deviation
+    summary: Classificação via modelo ML (sem IA)
+    consumes:
+      - multipart/form-data
+    parameters:
+      - in: formData
+        name: local
+        type: string
+        required: true
+        description: Local do desvio
+      - in: formData
+        name: description
+        type: string
+        required: true
+        description: Descrição textual do desvio
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Classificação do modelo ML
+      400:
+        description: Entrada inválida
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        local = request.form.get('local')
+        description = request.form.get('description')
+        if not local or not description:
+            return jsonify({
+                'error': 'InvalidInput',
+                'message': "'local' e 'description' são obrigatórios"
+            }), 400
+
+        classification = ml_service.classify(description, local)
+        return jsonify(classification.to_dict()), 200
+    except DeviationClassifierError as e:
+        logger.warning(f"Erro de aplicação: {e.message}")
+        return jsonify(e.to_dict()), 400
+    except Exception as e:
+        logger.error(f"Erro inesperado: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'InternalServerError',
+            'message': 'Erro interno do servidor',
+            'details': {'error': str(e)}
+        }), 500
+
+
+@deviation_bp.route('/api/ai-validate', methods=['POST'])
+def ai_validate():
+    """
+    Valida/corrige uma classificação usando IA (Abacus)
+
+    ---
+    tags:
+      - Deviation
+    summary: Validação via IA Abacus com JSON de classificação
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            local:
+              type: string
+            text:
+              type: string
+            classification:
+              type: object
+          required: [local, text, classification]
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Classificação validada/corrigida
+      400:
+        description: Entrada inválida
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        if not request.is_json:
+            return jsonify({
+                'error': 'InvalidInput',
+                'message': 'Content-Type application/json é obrigatório'
+            }), 400
+        data = request.get_json() or {}
+        local = data.get('local')
+        text = data.get('text')
+        classification_data = data.get('classification')
+        if not local or not text or not classification_data:
+            return jsonify({
+                'error': 'InvalidInput',
+                'message': "Campos 'local', 'text' e 'classification' são obrigatórios"
+            }), 400
+
+        # Monta objeto DeviationClassification a partir do JSON flat
+        classification = DeviationClassification(**classification_data)
+
+        validated = ai_service.validate_and_correct(text, local, classification)
+        return jsonify(validated.to_dict()), 200
+    except (DeviationClassifierError, TypeError, KeyError) as e:
+        logger.warning(f"Erro de aplicação ou dados inválidos: {str(e)}")
+        error_dict = e.to_dict() if hasattr(e, 'to_dict') else {
+            'error': 'InvalidInput', 'message': str(e)
+        }
+        return jsonify(error_dict), 400
+    except Exception as e:
         logger.error(f"Erro inesperado: {str(e)}", exc_info=True)
         return jsonify({
             'error': 'InternalServerError',

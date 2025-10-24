@@ -347,3 +347,26 @@ werkzeug.exceptions.BadRequest: 400 Bad Request: The browser (or proxy) sent a r
 2025-10-23 23:19:18,760 - app.services.ml_model_service - ERROR - Erro ao carregar modelo ML: Can't get attribute 'MockDeviationClassifier' on <module '__main__' from 'C:\\Users\\hrafa\\OneDrive\\Documentos\\GITHUB\\AI_DEVIATION_CLASSIFICATION\\app.py'>
 2025-10-23 23:19:18,761 - app.routes.deviation_routes - WARNING - Erro de aplicação: Falha ao carregar modelo ML
 2025-10-23 23:19:18,761 - app.routes.deviation_routes - WARNING - Erro de aplicação: Falha ao carregar modelo ML
+2025-10-23 23:24:03,528 - app.services.transcription_service - INFO - TranscriptionService inicializado com modelo: medium
+2025-10-23 23:24:03,529 - app.services.ml_model_service - INFO - MLModelService inicializado com modelo: models_data/deviation_classifier.pkl
+2025-10-23 23:24:03,529 - app.services.ai_validation_service - INFO - IAValidationService inicializado
+2025-10-23 23:24:03,529 - app.services.ai_validation_service - INFO - IA pronta (Abacus.AI)
+2025-10-23 23:24:03,529 - app.services.deviation_classification_service - INFO - DeviationClassificationService inicializado
+2025-10-23 23:24:03,530 - app.services.transcription_service - INFO - TranscriptionService inicializado com modelo: medium
+2025-10-23 23:24:03,530 - app.services.ml_model_service - INFO - MLModelService inicializado com modelo: models_data/deviation_classifier.pkl
+2025-10-23 23:24:03,530 - app.services.ai_validation_service - INFO - IAValidationService inicializado
+2025-10-23 23:24:03,531 - app.services.ai_validation_service - INFO - IA pronta (Abacus.AI)
+2025-10-23 23:24:03,611 - app - INFO - CORS configurado para permitir qualquer origem
+2025-10-23 23:24:03,613 - app - INFO - Swagger UI configurado em /docs (spec em /swagger.json)
+2025-10-23 23:24:03,615 - app.routes.deviation_routes - INFO - Rotas registradas com sucesso
+2025-10-23 23:24:03,615 - app.routes.deviation_routes - INFO - Rotas registradas com sucesso
+2025-10-23 23:24:03,616 - app - INFO - Aplicação Flask criada e configurada com sucesso
+2025-10-23 23:24:03,617 - app - INFO - Iniciando servidor em 0.0.0.0:8000 (debug=False)
+2025-10-23 23:28:27,360 - app.services.transcription_service - INFO - Iniciando transcrição de áudio (507820 bytes)
+2025-10-23 23:28:27,360 - app.services.transcription_service - INFO - Iniciando transcrição de áudio (507820 bytes)
+2025-10-23 23:28:27,361 - app.services.transcription_service - INFO - Carregando modelo Faster-Whisper: medium
+2025-10-23 23:28:27,361 - app.services.transcription_service - INFO - Carregando modelo Faster-Whisper: medium
+2025-10-23 23:28:36,392 - app.services.transcription_service - INFO - Modelo Faster-Whisper carregado com sucesso
+2025-10-23 23:28:36,392 - app.services.transcription_service - INFO - Modelo Faster-Whisper carregado com sucesso
+2025-10-23 23:29:02,569 - app.services.transcription_service - INFO - Transcrição concluída: 175 caracteres
+2025-10-23 23:29:02,569 - app.services.transcription_service - INFO - Transcrição concluída: 175 caracteres
