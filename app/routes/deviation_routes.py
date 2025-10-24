@@ -66,24 +66,8 @@ def classify_deviation():
       - Deviation
     summary: Classifica um desvio a partir de texto e/ou áudio
     consumes:
-      - application/json
       - multipart/form-data
     parameters:
-      - in: body
-        name: body
-        required: false
-        schema:
-          type: object
-          properties:
-            local:
-              type: string
-              description: Local do desvio
-            description:
-              type: string
-              description: Descrição textual do desvio
-            audio:
-              type: string
-              description: Áudio em base64
       - in: formData
         name: local
         type: string
