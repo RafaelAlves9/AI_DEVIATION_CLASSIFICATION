@@ -49,6 +49,37 @@ Valores de 'categoria' (int): 0=NotDefined, 1=EpiOrEpc, 2=Bos, 3=OrderAndCleanli
 Analise a descrição do desvio e a classificação fornecida. Se estiver coerente, retorne a mesma classificação.
 Se houver incoerências, corrija e retorne a versão corrigida.
 
+Abaixo, um exemplo de como você deve se comportar:
+
+### Exemplo de Entrada do Usuário:
+'''
+Desvio reportado:
+Local: MATRIZ - Ponto A
+Descrição: Placa de informação Saída de emergência na área do paiol de explosivo caiu
+
+Classificação atual:
+{
+    "gravidade": 2,
+    "urgencia": 2,
+    "tendencia": 2,
+    "tipo": 2,
+    "direcionamento": 2,
+    "categoria": 3
+}
+'''
+
+### Exemplo da Sua Resposta (JSON):
+'''json
+{
+    "gravidade": 2,
+    "urgencia": 2,
+    "tendencia": 2,
+    "tipo": 2,
+    "direcionamento": 2,
+    "categoria": 3
+}
+'''
+
 IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional, com a estrutura flat (plana):
 {
     "gravidade": <int>, "urgencia": <int>, "tendencia": <int>,
@@ -82,7 +113,7 @@ IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional, com a es
             "Content-Type": "application/json",
         }
         payload = {
-            "model": "auto",
+            "model": "gpt-5-nano",
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,

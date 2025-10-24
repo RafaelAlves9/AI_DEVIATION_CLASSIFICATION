@@ -23,19 +23,9 @@ class ClassificationRequest:
     
     def __post_init__(self):
         """Valida os valores após inicialização"""
-        # Converte inteiros para enums se necessário
-        if isinstance(self.gravidade, int):
-            self.gravidade = GravityLevel(self.gravidade)
-        if isinstance(self.urgencia, int):
-            self.urgencia = UrgencyLevel(self.urgencia)
-        if isinstance(self.tendencia, int):
-            self.tendencia = TrendLevel(self.tendencia)
-        if isinstance(self.tipo, int):
-            self.tipo = DeviationType(self.tipo)
-        if isinstance(self.direcionamento, int):
-            self.direcionamento = DeviationDirectioning(self.direcionamento)
-        if isinstance(self.categoria, int):
-            self.categoria = DeviationCategory(self.categoria)
+        # Validação para garantir que pelo menos um dos campos opcionais foi preenchido
+        if self.description is None and self.audio is None:
+            raise ValueError("Pelo menos 'description' ou 'audio' deve ser fornecido.")
 
 
 @dataclass

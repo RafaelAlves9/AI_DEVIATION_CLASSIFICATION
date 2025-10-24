@@ -10,8 +10,7 @@ from app.services.transcription_service import TranscriptionService
 from app.services.ml_model_service import MLModelService
 from app.services.ai_validation_service import AIValidationService
 from app.models.schemas import (
-    ClassificationRequest, DeviationClassification, 
-    DeviationCriticality, DeviationAnalysis
+    ClassificationRequest, DeviationClassification
 )
 from app.utils.exceptions import DeviationClassifierError
 from app.utils.logger import setup_logger
@@ -290,15 +289,43 @@ def ai_validate():
         name: body
         required: true
         schema:
+          id: AIValidationRequest
           type: object
           properties:
             local:
               type: string
+              description: "Local onde o desvio ocorreu."
+              example: "Área de Montagem"
             text:
               type: string
+              description: "Descrição completa do desvio (pode incluir transcrição de áudio)."
+              example: "Operador utilizando a furadeira sem óculos de proteção."
             classification:
               type: object
-          required: [local, text, classification]
+              description: "Objeto com a classificação gerada pelo modelo de ML."
+              properties:
+                gravidade:
+                  type: integer
+                  example: 3
+                urgencia:
+                  type: integer
+                  example: 4
+                tendencia:
+                  type: integer
+                  example: 3
+                tipo:
+                  type: integer
+                  example: 1
+                direcionamento:
+                  type: integer
+                  example: 2
+                categoria:
+                  type: integer
+                  example: 1
+          required:
+            - local
+            - text
+            - classification
     produces:
       - application/json
     responses:
