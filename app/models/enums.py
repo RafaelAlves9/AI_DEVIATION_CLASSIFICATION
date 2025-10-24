@@ -55,15 +55,15 @@ class DeviationDirectioning(IntEnum):
 class DeviationCategory(IntEnum):
     """Categorias do desvio"""
     NotDefined = 0
-    EpiOrEpc = 1
-    Bos = 2
-    OrderAndCleanlinessFiveS = 3
+    Bos = 1
+    EpiOrEpc = 2
+    MobileEquipment = 3
     Equipment = 4
     Ergonomics = 5
-    TrafficOfVehiclesAndPeople = 6
-    Environment = 7
+    Environment = 6
+    OrderAndCleanlinessFiveS = 7
     Quality = 8
     WorkRulesProceduresAndInstructions = 9
-    MobileEquipment = 10
+    TrafficOfVehiclesAndPeople = 10
     ToolsAndEquipment = 11
     Other = 12

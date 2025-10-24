@@ -44,7 +44,7 @@ Valores de 'urgencia' (int): 0=NotDefined, 1=CanWait, 2=NotVeryUrgent, 3=AsSoonA
 Valores de 'tendencia' (int): 0=NotDefined, 1=NoTrend, 2=WillGetWorseInTheLongTerm, 3=WillGetWorse, 4=WillGetWorseInTheShortTerm, 5=WillGetWorseQuickly
 Valores de 'tipo' (int): 0=NotDefined, 1=Behavior, 2=Structure
 Valores de 'direcionamento' (int): 0=NotDefined, 1=Factory, 2=Unit, 3=Facilities, 4=EnvironmentAndQuality
-Valores de 'categoria' (int): 0=NotDefined, 1=EpiOrEpc, 2=Bos, 3=OrderAndCleanlinessFiveS, 4=Equipment, 5=Ergonomics, 6=TrafficOfVehiclesAndPeople, 7=Environment, 8=Quality, 9=WorkRulesProceduresAndInstructions, 10=MobileEquipment, 11=ToolsAndEquipment, 12=Other
+Valores de 'categoria' (int): 0=NotDefined, 1=Bos, 2=EpiOrEpc, 3=MobileEquipment, 4=Equipment, 5=Ergonomics, 6=Environment, 7=OrderAndCleanlinessFiveS, 8=Quality, 9=WorkRulesProceduresAndInstructions, 10=TrafficOfVehiclesAndPeople, 11=ToolsAndEquipment, 12=Other
 
 Analise a descrição do desvio e a classificação fornecida. Se estiver coerente, retorne a mesma classificação.
 Se houver incoerências, corrija e retorne a versão corrigida.
